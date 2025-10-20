@@ -142,15 +142,4 @@ function moveFinalPoint(state: State, t: Vec2) {
         state.segments.pop();
         state.segments.push({pos: t});
     }
-
-    // given the last three points [?a, s, f] (f is last) and new point [t]
-    // does the triangle SFT contain any vertices of a scene collider?
-    //     yes ->
-    //        circle logic. have to start with the first vertex and go clockwise/counterclockwise now
-    //        first vertex is determined by angles. which one has the least angle from the orig. line
-    //     no ->
-    //        a? does the line AT collide with any scene colliders?
-    //            yes -> done [a, s, t]
-    //            no -> done [a, t]
-
 }
