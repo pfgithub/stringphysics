@@ -3,6 +3,16 @@ export type Line = [Vec2, Vec2];
 export type Triangle = [Vec2, Vec2, Vec2];
 export type Poly = Vec2[];
 
+export function vec2Sub(a: Vec2, b: Vec2): Vec2 {
+    return [a[0] - b[0], a[1] - b[1]];
+}
+export function vec2Magnitude(vec: Vec2): number {
+    return Math.hypot(vec[0], vec[1]);
+}
+export function vec2Distance(p1: Vec2, p2: Vec2): number {
+    return vec2Magnitude(vec2Sub(p1, p2));
+}
+
 export function pointInsideTriangle(point: Vec2, triangle: Triangle): boolean {
     const [p1, p2, p3] = triangle;
     const [px, py] = point;

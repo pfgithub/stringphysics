@@ -1,6 +1,9 @@
-import { lineIntersectsLine, pointInsideTriangle, type Line, type Poly, type Triangle, type Vec2 } from "./util";
+import { lineIntersectsLine, pointInsideTriangle, vec2Distance, type Line, type Poly, type Triangle, type Vec2 } from "./util";
 
-type Segment = {pos: Vec2}; // we could put tension too for elastic (or store that as true_start, true_end)
+type Segment = {
+    pos: Vec2,
+    alongLine: number,
+};
 type State = {
     segments: Segment[],
     sceneColliders: Poly[],
@@ -10,8 +13,8 @@ type State = {
 export function setupCanvas(canvas: HTMLCanvasElement): {cleanup: () => void} {
     const state: State = {
         segments: [
-            {pos: [0.5, 0.1]},
-            {pos: [0.1, 0.2]},
+            {pos: [0.5, 0.1], alongLine: 0},
+            {pos: [0.1, 0.2], alongLine: 1},
         ],
         sceneColliders: [
             [
@@ -120,10 +123,16 @@ function moveFinalPoint(state: State, t: Vec2) {
     }
 
     if (hitPoint) {
-        // split, then call moveFinalPoint again.
+        const sAlongLine = state.segments[state.segments.length - 2]!.alongLine;
+        const dFirst = vec2Distance(s, hitPoint);
+        const dSecond = vec2Distance(hitPoint, t);
+        const dTotal = dFirst + dSecond;
+        const rAlongLine = 1 - sAlongLine;
+        const rFirst = (dFirst / dTotal) * rAlongLine + sAlongLine;
         state.segments.pop();
-        state.segments.push({pos: hitPoint});
-        state.segments.push({pos: t});
+        state.segments.push({pos: hitPoint, alongLine: rFirst});
+        state.segments.push({pos: t, alongLine: 1});
+        // TODO: iterate if there were multiple hits
     } else if (a) {
         const revertLine: Line = [a, t];
         let hit = false;
@@ -139,15 +148,15 @@ function moveFinalPoint(state: State, t: Vec2) {
         if (hit) {
             // just move
             state.segments.pop();
-            state.segments.push({pos: t});
+            state.segments.push({pos: t, alongLine: 1});
         } else {
             // revert
             state.segments.pop();
             state.segments.pop();
-            state.segments.push({pos: t});
+            state.segments.push({pos: t, alongLine: 1});
         }
     } else {
         state.segments.pop();
-        state.segments.push({pos: t});
+        state.segments.push({pos: t, alongLine: 1});
     }
 }
