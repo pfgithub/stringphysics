@@ -74,6 +74,19 @@ function useSave(ctx: CanvasRenderingContext2D): {[Symbol.dispose]: () => void} 
     ctx.save();
     return {[Symbol.dispose]: () => ctx.restore()};
 }
+
+/**
+ * Interpolates a color based on a value t from 0 to 1.
+ * 0.0 = Yellow
+ * 1.0 = Red
+ */
+function getColorForAlongLine(t: number): string {
+    const r = 255;
+    const g = Math.round(255 * (1 - t));
+    const b = 0;
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 function renderScene(state: State, ctx: CanvasRenderingContext2D) {
     using _ = useSave(ctx);
     ctx.scale(state.scale, state.scale);
@@ -94,16 +107,26 @@ function renderScene(state: State, ctx: CanvasRenderingContext2D) {
         ctx.closePath();
         ctx.stroke();
     }
-    ctx.strokeStyle = "#F00";
-    ctx.beginPath();
-    for (const segment of state.segments) {
-        if (segment === state.segments[0]) {
-            ctx.moveTo(segment.pos[0], segment.pos[1]);
-        }else{
-            ctx.lineTo(segment.pos[0], segment.pos[1]);
-        }
+    
+    // Draw each segment of the line with its own gradient
+    for (let i = 1; i < state.segments.length; i++) {
+        const prev = state.segments[i - 1]!;
+        const current = state.segments[i]!;
+
+        const gradient = ctx.createLinearGradient(
+            prev.pos[0], prev.pos[1],
+            current.pos[0], current.pos[1]
+        );
+
+        gradient.addColorStop(0, getColorForAlongLine(prev.alongLine));
+        gradient.addColorStop(1, getColorForAlongLine(current.alongLine));
+
+        ctx.strokeStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(prev.pos[0], prev.pos[1]);
+        ctx.lineTo(current.pos[0], current.pos[1]);
+        ctx.stroke();
     }
-    ctx.stroke();
 }
 function moveFinalPoint(state: State, t: Vec2) {
     const a: Vec2 | undefined = state.segments[state.segments.length - 3]?.pos;
